@@ -60,6 +60,7 @@ def _make_dir(directory):
 
 
 def save_models(encoder, decoder, epoch):
+    print("saving models")
     out_dir = './saved_models/{}'.format(epoch)
     _make_dir(out_dir)
     torch.save(encoder, '{}/E'.format(out_dir))
@@ -185,7 +186,6 @@ def sample_latent_space(vae_encoder, vae_decoder, sample_len):
     # runs over letters from molecules (len=size of largest molecule)
     for _ in range(sample_len):
         out_one_hot, hidden = vae_decoder(fancy_latent_point, hidden)
-
         out_one_hot = out_one_hot.flatten().detach()
         soft = nn.Softmax(0)
         out_one_hot = soft(out_one_hot)
@@ -271,7 +271,12 @@ def train_model(vae_encoder, vae_decoder,
     num_batches_train = int(len(data_train) / batch_size)
 
     quality_valid_list = [0, 0, 0, 0]
+
+        
     for epoch in range(num_epochs):
+
+        if epoch > 0:
+            save_models(vae_encoder, vae_decoder, epoch)
 
         data_train = data_train[torch.randperm(data_train.size()[0])]
 
@@ -353,12 +358,12 @@ def train_model(vae_encoder, vae_decoder,
         with open('results.dat', 'a') as content:
             content.write(report + '\n')
 
-        if quality_valid_list[-1] < 70. and epoch > 200:
-            break
+        #if quality_valid_list[-1] < 70. and epoch > 200:
+        #    break
 
-        if quality_increase > 20:
-            print('Early stopping criteria')
-            break
+        #if quality_increase > 20:
+        #    print('Early stopping criteria')
+        #    break
 
 
 def compute_elbo(x, x_hat, mus, log_vars, KLD_alpha):
